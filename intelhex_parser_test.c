@@ -68,9 +68,34 @@ static void test_crc_fail(void)
 	TEST_ASSERT(intelhex_parser_get_data(&p, &address, &len) == NULL);
 }
 
+static void test_file(void)
+{
+	FILE *fp = fopen("hello_world.ihex", "rb");
+	struct intelhex_parser p;
+	intelhex_parser_init(&p);
+
+	TEST_ASSERT(fp != NULL);
+	while (!feof(fp)) {
+		int ch = fgetc(fp);
+		if (ch >= 0) {
+			int e = intelhex_parser_add_byte(&p, ch);
+			TEST_ASSERT(e >= 0);
+			if (e > 0) {
+				uint32_t address;
+				uint32_t len;
+				uint8_t *data = intelhex_parser_get_data(&p, &address, &len);
+
+				printf("data: %p address: 0x%x len: 0x%x\n", data, address, len);				
+			}
+		}
+	}
+	fclose(fp);
+}
+
 TEST_LIST = {
    {"line", test_line},
    {"simple", test_simple},
    {"crc_fail", test_crc_fail},
+   {"file", test_file},
    {NULL, NULL}
 };

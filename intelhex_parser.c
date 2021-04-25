@@ -112,6 +112,16 @@ int intelhex_parser_add_byte(struct intelhex_parser *parser, uint8_t byte)
 				parser->seen_eof = true;
 				parsed_line = false;
 				break;
+			case IHEX_RECORD_START_SEGMENT_ADDRESS:
+				// TODO: This is unhandled at the moment
+				parsed_line = false;
+				break;
+			case IHEX_RECORD_EXTENDED_LINEAR_ADDRESS:
+				if (parser->line_length != 2)
+					return -1;
+				parser->base_address = (parser->buffer[0] << 8 | parser->buffer[1]) << 16;
+				parsed_line = false;
+				break;
 			default:
 				ERR("unhandled record %d", parser->record_type);
 				return -1;
@@ -139,7 +149,6 @@ uint8_t *intelhex_parser_get_data(struct intelhex_parser *parser, uint32_t *addr
 	// reset the parser...
 	parser->last_val = 0;
 	parser->line_address = 0;
-	parser->base_address = 0;
 	parser->record_type = 0;
 	parser->crc = 0;
 

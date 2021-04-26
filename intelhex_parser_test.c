@@ -44,8 +44,7 @@ static void test_simple(void)
             uint32_t len;
             uint8_t *hex_data = intelhex_parser_get_data(&p, &address, &len);
 
-            printf("hex_data: %p address: 0x%x len: 0x%x\n", hex_data,
-                   address, len);
+            TEST_ASSERT(hex_data != NULL);
             TEST_ASSERT(address == 0x100 + 0x10 * nlines);
             TEST_ASSERT(len == 0x10);
             nlines++;
@@ -86,9 +85,8 @@ static void test_file(void)
                 uint32_t address;
                 uint32_t len;
                 uint8_t *data = intelhex_parser_get_data(&p, &address, &len);
-
-                printf("data: %p address: 0x%x len: 0x%x\n", data, address,
-                       len);
+                TEST_ASSERT(data != NULL);
+                TEST_ASSERT(len > 0 && len <= 256);
             }
         }
     }

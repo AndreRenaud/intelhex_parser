@@ -41,9 +41,9 @@ static inline void intelhex_parser_init(struct intelhex_parser *parser)
  * @param parser IntelHex parser object
  * @param byte The byte of data to parser
  * @return < 0 if the data is invalid
- *				Subsequent calls to intelhex_parser_add_byte may
- *result in invalid data after this has occurred. > 0 if the new byte results
- *in a complete record
+ *				Subsequent calls to intelhex_parser_add_byte
+ *may result in invalid data after this has occurred. > 0 if the new byte
+ *results in a complete record
  *         == 0 if the byte is successfully absorbed
  */
 int intelhex_parser_add_byte(struct intelhex_parser *parser, uint8_t byte);

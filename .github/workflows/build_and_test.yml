@@ -9,8 +9,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: setup
-      run: sudo apt-get update && sudo apt-get -f install cppcheck clang-format
+      run: sudo apt-get update && sudo apt-get -f install cppcheck clang-format valgrind clang
     - name: Build
       run: make
-    - name: Test
-      run: make test
+    - name: Test & Fuzz
+      run: |
+        make intelhex_parser_test
+        valgrind -q --leak-check=full --error-exitcode=1 ./intelhex_parser_test
+        make fuzz CLANG=clang

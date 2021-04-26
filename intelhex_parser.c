@@ -3,9 +3,16 @@
 
 #include "intelhex_parser.h"
 
+#ifdef DEBUG
 #define ERR(a, b...)                                                         \
     fprintf(stderr, "ihex:%s:%d: " a "\n", __func__, __LINE__, ##b)
+#else
+#define ERR(a, b...)                                                         \
+    do {                                                                     \
+    } while (0)
+#endif
 
+// See https://en.wikipedia.org/wiki/Intel_HEX#Record_types
 enum {
     IHEX_RECORD_DATA,
     IHEX_RECORD_EOF,
@@ -29,11 +36,13 @@ static int from_hex(uint8_t byte)
 int intelhex_parser_add_byte(struct intelhex_parser *parser, uint8_t byte)
 {
     bool parsed_line = false;
+    // Once we've seen the EOF record, we'll only accept new lines
     if (parser->seen_eof) {
         if (byte == '\n' || byte == '\r')
             return 0;
         return -1;
     }
+    // Records start with a :, but proceeding new lines are fine/ignored
     if (parser->pos == 0) {
         if (byte == ':')
             parser->pos++;
@@ -43,20 +52,16 @@ int intelhex_parser_add_byte(struct intelhex_parser *parser, uint8_t byte)
     }
 
     int val = from_hex(byte);
+    // Apart from the : record, all other data must be a hex value
     if (val < 0)
         return -1;
-    if (parser->pos % 2 == 0) {
+    if (parser->pos % 2 == 0)
         parser->crc += parser->last_val << 4 | val;
-        // ERR("crc: 0x%x 0x%x 0x%x", (~parser->crc) & 0xff, parser->crc,
-        // parser->last_val << 4 | val);
-    }
     switch (parser->pos) {
     case 1: // byte count
     case 2:
         parser->line_length <<= 4;
         parser->line_length |= val;
-        // if (parser->pos == 2) ERR("line_length: 0x%x",
-        // parser->line_length);
         break;
 
     case 3: // addr
@@ -65,36 +70,28 @@ int intelhex_parser_add_byte(struct intelhex_parser *parser, uint8_t byte)
     case 6:
         parser->line_address <<= 4;
         parser->line_address |= val;
-        // if (parser->pos == 6) ERR("line address: 0x%x",
-        // parser->line_address);
         break;
 
     case 7:
     case 8:
         parser->record_type <<= 4;
         parser->record_type |= val;
-        // if (parser->pos == 8) ERR("record type: %d", parser->record_type);
         break;
 
     default: {
-        // Is it a data byte?
         int data_pos = parser->pos - 9;
 
-        if (data_pos / 2 < parser->line_length) {
+        // Is it a data byte?
+        if (data_pos < parser->line_length * 2) {
             if (data_pos % 2 != 0) {
                 parser->buffer[data_pos / 2] = parser->last_val << 4 | val;
-                // ERR("data %d/%d: 0x%x", data_pos / 2, parser->line_length,
-                // parser->buffer[data_pos / 2]);
             }
         } else if (data_pos == parser->line_length * 2) {
             ;
         } else if (data_pos == parser->line_length * 2 + 1) {
-            // uint8_t crc = parser->last_val << 4 | val;
-            // ERR("crc: 0x%x 0x%x", crc, parser->crc);
             // The CRC will have evaluated to 0 if all went well
             if (parser->crc != 0)
                 return -1;
-            // TODO: Check CRC
             parsed_line = true;
         } else {
             ERR("pos: %d", parser->pos);
@@ -139,7 +136,6 @@ int intelhex_parser_add_byte(struct intelhex_parser *parser, uint8_t byte)
 uint8_t *intelhex_parser_get_data(struct intelhex_parser *parser,
                                   uint32_t *address, uint32_t *length)
 {
-    // TODO: Better check
     if (parser->pos != 0)
         return NULL;
     if (address)

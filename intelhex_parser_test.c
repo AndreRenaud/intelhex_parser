@@ -71,7 +71,7 @@ static void test_crc_fail(void)
 
 static void test_file(void)
 {
-    FILE *fp = fopen("hello_world.ihex", "rb");
+    FILE *fp = fopen("test_data/hello_world.ihex", "rb");
     struct intelhex_parser p;
     intelhex_parser_init(&p);
 

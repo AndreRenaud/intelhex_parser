@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
-      - name: Setup
-        run: apt install cppcheck clang-format
-      - name: Build
-        run: make
-      - name: Test
-        run: make test
+    - uses: actions/checkout@v2
+    - name: setup
+      run: sudo apt-get update && sudo apt-get -f install cppcheck clang-format
+    - name: Build
+      run: make
+    - name: Test
+      run: make test

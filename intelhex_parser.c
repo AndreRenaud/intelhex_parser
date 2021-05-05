@@ -136,7 +136,7 @@ int intelhex_parser_add_byte(struct intelhex_parser *parser, uint8_t byte)
 uint8_t *intelhex_parser_get_data(struct intelhex_parser *parser,
                                   uint32_t *address, uint32_t *length)
 {
-    if (parser->pos != 0)
+    if (parser->pos != 0 || parser->seen_eof)
         return NULL;
     if (address)
         *address = parser->line_address | parser->base_address;
